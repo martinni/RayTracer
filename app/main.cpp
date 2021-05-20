@@ -1,17 +1,17 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "example.h"
+#include "matrix.h"
+#include "vector.h"
 
 /*
  * Simple main program that demontrates how access
  * CMake definitions (here the version number) from source code.
  */
-int main() {
+int main()
+{
   std::cout << "Hello World" << std::endl;
 
-  // Bring in the dummy class from the example source,
-  // just to show that it is accessible from main.cpp.
-  Dummy d = Dummy();
-  return d.doSomething() ? 0 : -1;
+  Vec3f vec(1, 2, 3);
+  Matrix44f mat(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4);
 }

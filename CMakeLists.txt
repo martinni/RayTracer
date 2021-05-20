@@ -7,9 +7,6 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-# Set project name, version and laguages here. (change as needed)
-# Version numbers are available by including "exampleConfig.h" in 
-# the source. See exampleConfig.h.in for some more details.
 project(CPP_BOILERPLATE VERSION 1.2.3.4 LANGUAGES CXX)
 
 
@@ -31,7 +28,8 @@ find_lto(CXX)
 #                         Locate files (change as needed).
 # --------------------------------------------------------------------------------
 set(SOURCES          # All .cpp files in src/
-    src/example.cpp
+  src/matrix.cpp
+  src/vector.cpp
 )
 set(LIBRARY_NAME engine)  # Default name for the library built from src/*.cpp (change if you wish)
 
