@@ -29,7 +29,11 @@ find_lto(CXX)
 # --------------------------------------------------------------------------------
 set(SOURCES          # All .cpp files in src/
   src/matrix.cpp
-  src/vector.cpp
+  src/object.cpp
+  src/point.cpp
+  src/pixel.cpp
+  src/ppmFile.cpp
+  src/raytracer.cpp
 )
 set(LIBRARY_NAME engine)  # Default name for the library built from src/*.cpp (change if you wish)
 
