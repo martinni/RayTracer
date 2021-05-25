@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector.h>
-
 class Point
 {
   public:
@@ -14,6 +12,4 @@ class Point
     Point operator+(const Point &v) const { return Point(x + v.x, y + v.y, z + v.z); }
 
     Point operator-(const Point &v) const { return Point(x - v.x, y - v.y, z - v.z); }
-
-    Point operator+(const Vec3f &v) const { return Point(x + v.x, y + v.y, z + v.z); }
 };

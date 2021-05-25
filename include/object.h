@@ -9,7 +9,7 @@
 struct Intersection
 {
     Point p;
-    Vec3f normal;
+    Vec3 normal;
 };
 
 class Object
@@ -18,14 +18,14 @@ class Object
     Color color;
 
     virtual ~Object();
-    virtual std::optional<Intersection> getIntersectionWithRay(const Vec3f &ray,
+    virtual std::optional<Intersection> getIntersectionWithRay(const Vec3 &ray,
                                                                const Point origin) const = 0;
 };
 
 class Sphere : public Object
 {
   public:
-    virtual std::optional<Intersection> getIntersectionWithRay(const Vec3f &ray,
+    virtual std::optional<Intersection> getIntersectionWithRay(const Vec3 &ray,
                                                                const Point origin) const override;
 
   private:

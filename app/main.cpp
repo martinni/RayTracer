@@ -16,8 +16,8 @@ int main()
 {
     std::cout << "Hello World" << std::endl;
 
-    Vec3f vec(1, 2, 3);
-    Matrix44f mat(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4);
+    Vec3 vec(1, 2, 3);
+    Matrix44 mat(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4);
 
     PpmFile ppmFile("./scene.ppm", IMG_WIDTH, IMG_HEIGHT, COLOR_RANGE);
 
