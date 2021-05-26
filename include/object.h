@@ -25,6 +25,7 @@ class Object
 class Sphere : public Object
 {
   public:
+    Sphere(const Point &center, float radius);
     virtual std::optional<Intersection> getIntersectionWithRay(const Vec3 &ray,
                                                                const Point origin) const override;
 

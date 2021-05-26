@@ -4,6 +4,8 @@
 
 Object::~Object() {}
 
+Sphere::Sphere(const Point &p_center, float p_radius) : center(p_center), radius(p_radius) {}
+
 std::optional<Intersection> Sphere::getIntersectionWithRay(const Vec3 &ray,
                                                            const Point origin) const
 {
@@ -59,7 +61,7 @@ std::optional<Intersection> Sphere::getIntersectionWithRay(const Vec3 &ray,
     float z2 = origin.z + (ray.z - origin.z) * t2;
 
     // We return whatever point is closest to the origin
-    Point p = x1 < x2 ? Point(x1, y1, z1) : Point(x2, y2, z2);
+    Point p = x1 >= origin.x && x1 < x2 ? Point(x1, y1, z1) : Point(x2, y2, z2);
 
     Vec3 normal = Vec3(Point(p - center)).normalize();
 
