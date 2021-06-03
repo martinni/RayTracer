@@ -7,11 +7,12 @@
 namespace
 {
 
-Pixel trace(const Point &origin, const Vec3 &ray,
+Pixel trace(const Point &origin, const Vec3 &ray, const Light &light,
             const std::vector<std::shared_ptr<Object>> &objects)
 {
     float nearestObjectDist = std::numeric_limits<float>::max();
     std::shared_ptr<Object> nearestObject = nullptr;
+    std::optional<Intersection> nearestObjectIntersection;
 
     for (const auto &object : objects)
     {
@@ -23,22 +24,40 @@ Pixel trace(const Point &origin, const Vec3 &ray,
             {
                 nearestObjectDist = intersectionDist;
                 nearestObject = object;
+                nearestObjectIntersection = intersection;
             }
         }
     }
 
-    if (nearestObject)
+    if (!nearestObject)
     {
-        return Pixel{Color{0.5, 1, 0.5}};
+        return Pixel{Color{0, 0, 0}};
     }
 
-    return Pixel{Color{0, 0, 0}};
+    Vec3 shadowRay = Vec3(light.position - nearestObjectIntersection.value().p);
+    bool isInShadow = false;
+    for (const auto &object : objects)
+    {
+        if (object->getIntersectionWithRay(shadowRay, origin).has_value())
+        {
+            isInShadow = true;
+            break;
+        }
+    }
+
+    if (isInShadow)
+    {
+        return Pixel{Color{0, 0, 0}};
+    }
+
+    Color color = nearestObject->color * light.brightness;
+    return Pixel{color};
 }
 
 } // namespace
 
 std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objects,
-                               unsigned int width, unsigned int height)
+                               const Light &light, unsigned int width, unsigned int height)
 {
     std::vector<Pixel> pixels;
     pixels.reserve(width * height);
@@ -59,7 +78,7 @@ std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objec
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
             Vec3 ray(xx, yy, -1);
             ray.normalize();
-            pixels.push_back(trace(Point(0), ray, objects));
+            pixels.push_back(trace(Point(0), ray, light, objects));
         }
     }
 

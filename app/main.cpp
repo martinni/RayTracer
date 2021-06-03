@@ -16,19 +16,16 @@ const unsigned int COLOR_RANGE = 255;
 
 int main()
 {
-    std::cout << "Hello World" << std::endl;
-
-    Vec3 vec(1, 2, 3);
-    Matrix44 mat(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4);
-
     PpmFile ppmFile("./scene.ppm", IMG_WIDTH, IMG_HEIGHT, COLOR_RANGE);
 
     std::vector<std::shared_ptr<Object>> objects = {
-        std::make_shared<Sphere>(Point(1, 2, -15), 0.5),
-        std::make_shared<Sphere>(Point(0.0, 0, -20), 2),
-        std::make_shared<Sphere>(Point(5.0, -1, -15), 2),
-        std::make_shared<Sphere>(Point(-5.5, 0, -15), 3)};
+        std::make_shared<Sphere>(Point(1, 2, -15), 0.5, Color{1, 0, 0}),
+        std::make_shared<Sphere>(Point(0.0, 0, -20), 2, Color{0, 1, 0}),
+        std::make_shared<Sphere>(Point(5.0, -1, -15), 2, Color{0, 0, 0.5}),
+        std::make_shared<Sphere>(Point(-5.5, 0, -15), 3, Color{0.5, 0.5, 0.5})};
 
-    std::vector<Pixel> pixels = renderScene(objects, IMG_WIDTH, IMG_HEIGHT);
+    Light light{Point(7, 3, 30), 0.7};
+
+    std::vector<Pixel> pixels = renderScene(objects, light, IMG_WIDTH, IMG_HEIGHT);
     ppmFile.writePixels(pixels);
 }

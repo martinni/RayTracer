@@ -17,6 +17,7 @@ class Object
   public:
     Color color;
 
+    Object(const Color &color);
     virtual ~Object();
     virtual std::optional<Intersection> getIntersectionWithRay(const Vec3 &ray,
                                                                const Point origin) const = 0;
@@ -25,7 +26,7 @@ class Object
 class Sphere : public Object
 {
   public:
-    Sphere(const Point &center, float radius);
+    Sphere(const Point &center, float radius, const Color &color);
     virtual std::optional<Intersection> getIntersectionWithRay(const Vec3 &ray,
                                                                const Point origin) const override;
 
