@@ -34,6 +34,9 @@ Pixel trace(const Point &origin, const Vec3 &ray, const Light &light,
         return Pixel{Color{0, 0, 0}};
     }
 
+    (void)light;
+    return Pixel{nearestObject->color};
+    /*
     Vec3 shadowRay = Vec3(light.position - nearestObjectIntersection.value().p);
     bool isInShadow = false;
     for (const auto &object : objects)
@@ -52,6 +55,7 @@ Pixel trace(const Point &origin, const Vec3 &ray, const Light &light,
 
     Color color = nearestObject->color * light.brightness;
     return Pixel{color};
+    */
 }
 
 } // namespace
