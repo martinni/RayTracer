@@ -24,7 +24,7 @@ int main()
         std::make_shared<Sphere>(Point(5.0, -1, -15), 2, Color{0, 0, 0.5}),
         std::make_shared<Sphere>(Point(-5.5, 0, -15), 3, Color{0.5, 0.5, 0.5})};
 
-    Light light{Point(7, 3, 30), 0.7};
+    Light light{Point(7, 7, 0), 0.7};
 
     std::vector<Pixel> pixels = renderScene(objects, light, IMG_WIDTH, IMG_HEIGHT);
     ppmFile.writePixels(pixels);
