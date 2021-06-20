@@ -15,8 +15,7 @@ Sphere::Sphere(const Point &p_center, float p_radius, const Color &p_color,
 {
 }
 
-std::optional<Intersection> Sphere::getIntersectionWithRay(const Vec3 &ray,
-                                                           const Point origin) const
+std::optional<Intersection> Sphere::getIntersectionWithRay(const Ray &ray) const
 {
     /*
         Line equation:
@@ -44,12 +43,13 @@ std::optional<Intersection> Sphere::getIntersectionWithRay(const Vec3 &ray,
             - 0: there is 1 solution
             - negative: there are no solutions
     */
-    float a = pow((ray.x - origin.x), 2) + pow((ray.y - origin.y), 2) + pow((ray.z - origin.z), 2);
-    float b = -2 * ((ray.x - origin.x) * (center.x - origin.x) +
-                    (ray.y - origin.y) * (center.y - origin.y) +
-                    (ray.z - origin.z) * (center.z - origin.z));
-    float c = pow((center.x - origin.x), 2) + pow((center.y - origin.y), 2) +
-              pow((center.z - origin.z), 2) - pow(radius, 2);
+    float a = pow((ray.direction.x - ray.origin.x), 2) + pow((ray.direction.y - ray.origin.y), 2) +
+              pow((ray.direction.z - ray.origin.z), 2);
+    float b = -2 * ((ray.direction.x - ray.origin.x) * (center.x - ray.origin.x) +
+                    (ray.direction.y - ray.origin.y) * (center.y - ray.origin.y) +
+                    (ray.direction.z - ray.origin.z) * (center.z - ray.origin.z));
+    float c = pow((center.x - ray.origin.x), 2) + pow((center.y - ray.origin.y), 2) +
+              pow((center.z - ray.origin.z), 2) - pow(radius, 2);
 
     float z = pow(b, 2) - 4 * a * c;
 
@@ -61,16 +61,16 @@ std::optional<Intersection> Sphere::getIntersectionWithRay(const Vec3 &ray,
     float t2 = -b - sqrt(z) / 2 * a;
 
     // Calculate 2 intersections
-    float x1 = origin.x + ray.x * t1;
-    float y1 = origin.y + ray.y * t1;
-    float z1 = origin.z + ray.z * t1;
+    float x1 = ray.origin.x + ray.direction.x * t1;
+    float y1 = ray.origin.y + ray.direction.y * t1;
+    float z1 = ray.origin.z + ray.direction.z * t1;
 
-    float x2 = origin.x + ray.x * t2;
-    float y2 = origin.y + ray.y * t2;
-    float z2 = origin.z + ray.z * t2;
+    float x2 = ray.origin.x + ray.direction.x * t2;
+    float y2 = ray.origin.y + ray.direction.y * t2;
+    float z2 = ray.origin.z + ray.direction.z * t2;
 
-    // We return whatever point is closest to the origin
-    Point p = x1 >= origin.x && x1 < x2 ? Point(x1, y1, z1) : Point(x2, y2, z2);
+    // We return whatever point is closest to the ray origin
+    Point p = x1 >= ray.origin.x && x1 < x2 ? Point(x1, y1, z1) : Point(x2, y2, z2);
 
     Vec3 normal = Vec3(p - center).normalize();
 

@@ -7,6 +7,12 @@
 #include "point.h"
 #include "vector.h"
 
+struct Ray
+{
+    Point origin;
+    Vec3 direction;
+};
+
 struct Intersection
 {
     Point p;
@@ -40,8 +46,7 @@ class Object
 
     Object(const Color &color, const MaterialProperties &materialProperties);
     virtual ~Object();
-    virtual std::optional<Intersection> getIntersectionWithRay(const Vec3 &ray,
-                                                               const Point origin) const = 0;
+    virtual std::optional<Intersection> getIntersectionWithRay(const Ray &ray) const = 0;
 };
 
 class Sphere : public Object
@@ -49,8 +54,7 @@ class Sphere : public Object
   public:
     Sphere(const Point &center, float radius, const Color &color,
            const MaterialProperties &materialProperties);
-    virtual std::optional<Intersection> getIntersectionWithRay(const Vec3 &ray,
-                                                               const Point origin) const override;
+    virtual std::optional<Intersection> getIntersectionWithRay(const Ray &ray) const override;
 
   private:
     Point center;

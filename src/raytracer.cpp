@@ -21,8 +21,7 @@ struct Options
 };
 
 std::optional<IntersectedObject>
-getNearestObject(const Point &origin, const Vec3 &rayDir,
-                 const std::vector<std::shared_ptr<Object>> &objects)
+getNearestObject(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects)
 {
     float nearestObjectDist = std::numeric_limits<float>::max();
     std::shared_ptr<Object> nearestObject = nullptr;
@@ -30,10 +29,10 @@ getNearestObject(const Point &origin, const Vec3 &rayDir,
 
     for (const auto &object : objects)
     {
-        std::optional<Intersection> intersection = object->getIntersectionWithRay(rayDir, origin);
+        std::optional<Intersection> intersection = object->getIntersectionWithRay(ray);
         if (intersection.has_value())
         {
-            float intersectionDist = Vec3(intersection.value().p - origin).norm();
+            float intersectionDist = Vec3(intersection.value().p - ray.origin).norm();
             if (intersectionDist < nearestObjectDist)
             {
                 nearestObjectDist = intersectionDist;
@@ -51,8 +50,7 @@ getNearestObject(const Point &origin, const Vec3 &rayDir,
     return IntersectedObject{nearestObject, nearestObjectIntersection.value()};
 }
 
-Pixel castRay(const Point &origin, const Vec3 &rayDir,
-              const std::vector<std::shared_ptr<Object>> &objects,
+Pixel castRay(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects,
               const std::vector<std::shared_ptr<Light>> &lights, const Options &options,
               unsigned int &depth)
 {
@@ -61,7 +59,7 @@ Pixel castRay(const Point &origin, const Vec3 &rayDir,
         return Pixel{options.backgroundColor};
     }
 
-    std::optional<IntersectedObject> nearestObject = getNearestObject(origin, rayDir, objects);
+    std::optional<IntersectedObject> nearestObject = getNearestObject(ray, objects);
     if (!nearestObject)
     {
         return Pixel{options.backgroundColor};
@@ -123,11 +121,13 @@ std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objec
         {
             float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectRatio;
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
-            Vec3 cameraRay(xx, yy, -1);
-            cameraRay.normalize();
+
+            Vec3 cameraRayDirection(xx, yy, -1);
+            cameraRayDirection.normalize();
+            Ray cameraRay{Point(0), cameraRayDirection};
 
             unsigned int depth = 0;
-            pixels.push_back(castRay(Point(0), cameraRay, objects, lights, options, depth));
+            pixels.push_back(castRay(cameraRay, objects, lights, options, depth));
         }
     }
 
