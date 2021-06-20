@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <limits>
+#include <variant>
 
 #include "raytracer.h"
 #include "vector.h"
@@ -7,8 +8,21 @@
 namespace
 {
 
-Pixel trace(const Point &origin, const Vec3 &ray, const Light &light,
-            const std::vector<std::shared_ptr<Object>> &objects)
+struct IntersectedObject
+{
+    std::shared_ptr<Object> object;
+    Intersection intersection;
+};
+
+struct Options
+{
+    Color backgroundColor;
+    unsigned int recursionMaxDepth;
+};
+
+std::optional<IntersectedObject>
+getNearestObject(const Point &origin, const Vec3 &rayDir,
+                 const std::vector<std::shared_ptr<Object>> &objects)
 {
     float nearestObjectDist = std::numeric_limits<float>::max();
     std::shared_ptr<Object> nearestObject = nullptr;
@@ -16,7 +30,7 @@ Pixel trace(const Point &origin, const Vec3 &ray, const Light &light,
 
     for (const auto &object : objects)
     {
-        std::optional<Intersection> intersection = object->getIntersectionWithRay(ray, origin);
+        std::optional<Intersection> intersection = object->getIntersectionWithRay(rayDir, origin);
         if (intersection.has_value())
         {
             float intersectionDist = Vec3(intersection.value().p - origin).norm();
@@ -31,37 +45,65 @@ Pixel trace(const Point &origin, const Vec3 &ray, const Light &light,
 
     if (!nearestObject)
     {
-        return Pixel{Color{0, 0, 0}};
+        return std::nullopt;
     }
 
-    (void)light;
-    return Pixel{nearestObject->color};
-    /*
-    Vec3 shadowRay = Vec3(light.position - nearestObjectIntersection.value().p);
-    bool isInShadow = false;
-    for (const auto &object : objects)
+    return IntersectedObject{nearestObject, nearestObjectIntersection.value()};
+}
+
+Pixel castRay(const Point &origin, const Vec3 &rayDir,
+              const std::vector<std::shared_ptr<Object>> &objects,
+              const std::vector<std::shared_ptr<Light>> &lights, const Options &options,
+              unsigned int &depth)
+{
+    if (depth > options.recursionMaxDepth)
     {
-        if (object->getIntersectionWithRay(shadowRay, origin).has_value())
+        return Pixel{options.backgroundColor};
+    }
+
+    std::optional<IntersectedObject> nearestObject = getNearestObject(origin, rayDir, objects);
+    if (!nearestObject)
+    {
+        return Pixel{options.backgroundColor};
+    }
+
+    const auto &object = nearestObject.value().object;
+    const auto &nearestObjectMaterialProperties = object->materialProperties;
+
+    // Will implement the visitor after learning about shading and illumination
+    Color pixelColor = std::visit(
+        [&object](const auto &properties)
         {
-            isInShadow = true;
-            break;
-        }
-    }
+            using T = std::decay_t<decltype(properties)>;
+            if constexpr (std::is_same_v<T, DiffuseProperties>)
+            {
+                return object->color;
+            }
+            else if constexpr (std::is_same_v<T, MirrorProperties>)
+            {
+                return object->color;
+            }
+            else if constexpr (std::is_same_v<T, TransparentProperties>)
+            {
+                return object->color;
+            }
+            else
+            {
+                std::cerr << "unknown material properties" << std::endl;
+            }
+        },
+        nearestObjectMaterialProperties);
 
-    if (isInShadow)
-    {
-        return Pixel{Color{0, 0, 0}};
-    }
+    (void)lights;
 
-    Color color = nearestObject->color * light.brightness;
-    return Pixel{color};
-    */
+    return Pixel{pixelColor};
 }
 
 } // namespace
 
 std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objects,
-                               const Light &light, unsigned int width, unsigned int height)
+                               const std::vector<std::shared_ptr<Light>> &lights,
+                               unsigned int width, unsigned int height)
 {
     std::vector<Pixel> pixels;
     pixels.reserve(width * height);
@@ -72,17 +114,20 @@ std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objec
     float fov = 30;
     float aspectRatio = width / float(height);
     float angle = tan(M_PI * 0.5 * fov / 180.);
+    Options options{Color{0, 0, 0}, 5};
 
-    // Trace rays
+    // Compute each pixel color
     for (unsigned int y = 0; y < height; y++)
     {
         for (unsigned int x = 0; x < width; x++)
         {
             float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectRatio;
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
-            Vec3 ray(xx, yy, -1);
-            ray.normalize();
-            pixels.push_back(trace(Point(0), ray, light, objects));
+            Vec3 cameraRay(xx, yy, -1);
+            cameraRay.normalize();
+
+            unsigned int depth = 0;
+            pixels.push_back(castRay(Point(0), cameraRay, objects, lights, options, depth));
         }
     }
 

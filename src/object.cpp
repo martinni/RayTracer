@@ -2,12 +2,16 @@
 
 #include "object.h"
 
-Object::Object(const Color &p_color) : color(p_color) {}
+Object::Object(const Color &p_color, const MaterialProperties &p_materialProperties)
+    : color(p_color), materialProperties(p_materialProperties)
+{
+}
 
 Object::~Object() {}
 
-Sphere::Sphere(const Point &p_center, float p_radius, const Color &p_color)
-    : Object(p_color), center(p_center), radius(p_radius)
+Sphere::Sphere(const Point &p_center, float p_radius, const Color &p_color,
+               const MaterialProperties &p_materialProperties)
+    : Object(p_color, p_materialProperties), center(p_center), radius(p_radius)
 {
 }
 
@@ -57,13 +61,13 @@ std::optional<Intersection> Sphere::getIntersectionWithRay(const Vec3 &ray,
     float t2 = -b - sqrt(z) / 2 * a;
 
     // Calculate 2 intersections
-    float x1 = origin.x + (ray.x - origin.x) * t1;
-    float y1 = origin.y + (ray.y - origin.y) * t1;
-    float z1 = origin.z + (ray.z - origin.z) * t1;
+    float x1 = origin.x + ray.x * t1;
+    float y1 = origin.y + ray.y * t1;
+    float z1 = origin.z + ray.z * t1;
 
-    float x2 = origin.x + (ray.x - origin.x) * t2;
-    float y2 = origin.y + (ray.y - origin.y) * t2;
-    float z2 = origin.z + (ray.z - origin.z) * t2;
+    float x2 = origin.x + ray.x * t2;
+    float y2 = origin.y + ray.y * t2;
+    float z2 = origin.z + ray.z * t2;
 
     // We return whatever point is closest to the origin
     Point p = x1 >= origin.x && x1 < x2 ? Point(x1, y1, z1) : Point(x2, y2, z2);

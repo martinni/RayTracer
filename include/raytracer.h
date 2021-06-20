@@ -13,4 +13,5 @@ struct Light
 };
 
 std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objects,
-                               const Light &light, unsigned int width, unsigned int height);
+                               const std::vector<std::shared_ptr<Light>> &lights,
+                               unsigned int width, unsigned int height);
