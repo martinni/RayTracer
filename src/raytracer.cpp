@@ -20,6 +20,8 @@ struct Options
     unsigned int recursionMaxDepth;
 };
 
+inline float degree2radian(float degree) { return degree * M_PI / 180; }
+
 std::optional<IntersectedObject>
 getNearestObject(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects)
 {
@@ -109,9 +111,9 @@ std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objec
     float invWidth = 1 / float(width);
     float invHeight = 1 / float(height);
 
-    float fov = 30;
+    float fieldOfView = 30;
     float aspectRatio = width / float(height);
-    float angle = tan(M_PI * 0.5 * fov / 180.);
+    float angle = tan(degree2radian(0.5 * fieldOfView));
     Options options{Color{0, 0, 0}, 5};
 
     // Compute each pixel color
@@ -122,9 +124,10 @@ std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objec
             float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectRatio;
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
 
-            Vec3 cameraRayDirection(xx, yy, -1);
+            Point cameraRayOrigin{Point(0)};
+            Vec3 cameraRayDirection = Vec3(xx, yy, -1) - cameraRayOrigin;
             cameraRayDirection.normalize();
-            Ray cameraRay{Point(0), cameraRayDirection};
+            Ray cameraRay{cameraRayOrigin, cameraRayDirection};
 
             unsigned int depth = 0;
             pixels.push_back(castRay(cameraRay, objects, lights, options, depth));
