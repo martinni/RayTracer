@@ -51,27 +51,31 @@ std::optional<Intersection> Sphere::getIntersectionWithRay(const Ray &ray) const
     float c = pow((center.x - ray.origin.x), 2) + pow((center.y - ray.origin.y), 2) +
               pow((center.z - ray.origin.z), 2) - pow(radius, 2);
 
-    float z = pow(b, 2) - 4 * a * c;
+    // Use more stable equation to avoid catastrophic cancellation
+    float delta = pow(b, 2) - 4 * a * c;
 
-    if (z < 0)
+    if (delta < 0)
     {
         return std::nullopt;
     }
-    float t1 = -b + sqrt(z) / 2 * a;
-    float t2 = -b - sqrt(z) / 2 * a;
+    float t1 = -b + sqrt(delta) / 2 * a;
+    float t2 = -b - sqrt(delta) / 2 * a;
 
-    // Calculate 2 intersections
-    float x1 = ray.origin.x + ray.direction.x * t1;
-    float y1 = ray.origin.y + ray.direction.y * t1;
-    float z1 = ray.origin.z + ray.direction.z * t1;
+    if (t1 < 0 && t2 < 0)
+    {
+        // Both intersections are behind the origin
+        return std::nullopt;
+    }
 
-    float x2 = ray.origin.x + ray.direction.x * t2;
-    float y2 = ray.origin.y + ray.direction.y * t2;
-    float z2 = ray.origin.z + ray.direction.z * t2;
+    // We keep whatever point is closest to the ray origin
+    float t0 = t1 >= t2 ? t1 : t2;
 
-    // We return whatever point is closest to the ray origin
-    Point p = x1 >= ray.origin.x && x1 < x2 ? Point(x1, y1, z1) : Point(x2, y2, z2);
+    // Calculate intersection coordinate
+    float x = ray.origin.x + ray.direction.x * t0;
+    float y = ray.origin.y + ray.direction.y * t0;
+    float z = ray.origin.z + ray.direction.z * t0;
 
+    Point p(x, y, z);
     Vec3 normal = Vec3(p - center).normalize();
 
     return Intersection{p, normal};
