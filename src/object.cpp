@@ -52,14 +52,18 @@ std::optional<Intersection> Sphere::getIntersectionWithRay(const Ray &ray) const
               pow((center.z - ray.origin.z), 2) - pow(radius, 2);
 
     // Use more stable equation to avoid catastrophic cancellation
-    float delta = pow(b, 2) - 4 * a * c;
+    float discriminant = pow(b, 2) - 4 * a * c;
 
-    if (delta < 0)
+    if (discriminant < 0)
     {
         return std::nullopt;
     }
-    float t1 = -b + sqrt(delta) / 2 * a;
-    float t2 = -b - sqrt(delta) / 2 * a;
+
+    // Following equations are more stable than the usual [-|+]b + sqrt(delta) / 2 * a;
+    // See "catastrophic cancellation" and "loss of significance"
+    float q = (b > 0) ? -0.5 * (b + sqrt(discriminant)) : -0.5 * (b - sqrt(discriminant));
+    float t1 = q / a;
+    float t2 = c / q;
 
     if (t1 < 0 && t2 < 0)
     {
