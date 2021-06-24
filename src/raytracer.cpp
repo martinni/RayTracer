@@ -8,6 +8,11 @@
 namespace
 {
 
+// Using the same material parameters for every objects for now
+const float SPECULAR_EXPONENT = 25;
+const float KD = 0.8;
+const float KS = 0.2;
+
 struct IntersectedObject
 {
     std::shared_ptr<Object> object;
@@ -21,6 +26,11 @@ struct Options
 };
 
 inline float degree2radian(float degree) { return degree * M_PI / 180; }
+
+Vec3 getReflectionDirection(const Vec3 &lightDir, const Vec3 &normal)
+{
+    return lightDir - normal * 2 * lightDir.dotProduct(normal);
+}
 
 std::optional<IntersectedObject>
 getNearestObject(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects)
@@ -52,50 +62,56 @@ getNearestObject(const Ray &ray, const std::vector<std::shared_ptr<Object>> &obj
     return IntersectedObject{nearestObject, nearestObjectIntersection.value()};
 }
 
-Pixel castRay(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects,
-              const std::vector<std::shared_ptr<Light>> &lights, const Options &options,
-              unsigned int &depth)
+Color shade(const IntersectedObject &intersectedObject, const Ray &ray,
+            const std::vector<std::shared_ptr<Object>> &objects,
+            const std::vector<std::shared_ptr<Light>> &lights)
 {
-    if (depth > options.recursionMaxDepth)
-    {
-        return Pixel{options.backgroundColor};
-    }
+    const Intersection &intersection = intersectedObject.intersection;
 
+    float lightIntensity = 0;
+    float specularColor = 0;
+
+    // Filter out intersected object from the object array so that we don't intersect it with itself
+    std::vector<std::shared_ptr<Object>> otherObjects;
+    std::copy_if(objects.begin(), objects.end(), std::back_inserter(otherObjects),
+                 [&intersectedObject](const std::shared_ptr<Object> &obj)
+                 { return obj != intersectedObject.object; });
+
+    for (const std::shared_ptr<Light> &light : lights)
+    {
+        Ray shadowRay{intersection.p, Vec3(light->position - intersection.p).normalize()};
+        std::optional<IntersectedObject> nearestObject = getNearestObject(shadowRay, otherObjects);
+        if (nearestObject.has_value())
+        {
+            float shadowObjectToLightDist =
+                Vec3(nearestObject.value().intersection.p - light->position).norm();
+            float objectToLightDist = Vec3(intersection.p - light->position).norm();
+            if (shadowObjectToLightDist < objectToLightDist)
+            {
+                continue;
+            }
+        }
+        lightIntensity += (light->brightness *
+                           std::max(0.f, shadowRay.direction.dotProduct(intersection.normal)));
+        Vec3 reflectionDirection =
+            getReflectionDirection(shadowRay.direction * -1, intersection.normal);
+        specularColor +=
+            powf(std::max(0.f, -reflectionDirection.dotProduct(ray.direction)), SPECULAR_EXPONENT) *
+            light->brightness;
+    }
+    return intersectedObject.object->color * lightIntensity * KD + specularColor * KS;
+}
+
+Pixel castRay(const Ray &ray, const std::vector<std::shared_ptr<Object>> &objects,
+              const std::vector<std::shared_ptr<Light>> &lights, const Options &options)
+{
     std::optional<IntersectedObject> nearestObject = getNearestObject(ray, objects);
     if (!nearestObject)
     {
         return Pixel{options.backgroundColor};
     }
 
-    const auto &object = nearestObject.value().object;
-    const auto &nearestObjectMaterialProperties = object->materialProperties;
-
-    // Will implement the visitor after learning about shading and illumination
-    Color pixelColor = std::visit(
-        [&object](const auto &properties)
-        {
-            using T = std::decay_t<decltype(properties)>;
-            if constexpr (std::is_same_v<T, DiffuseProperties>)
-            {
-                return object->color;
-            }
-            else if constexpr (std::is_same_v<T, MirrorProperties>)
-            {
-                return object->color;
-            }
-            else if constexpr (std::is_same_v<T, TransparentProperties>)
-            {
-                return object->color;
-            }
-            else
-            {
-                std::cerr << "unknown material properties" << std::endl;
-            }
-        },
-        nearestObjectMaterialProperties);
-
-    (void)lights;
-
+    Color pixelColor = shade(nearestObject.value(), ray, objects, lights);
     return Pixel{pixelColor};
 }
 
@@ -129,8 +145,7 @@ std::vector<Pixel> renderScene(const std::vector<std::shared_ptr<Object>> &objec
             cameraRayDirection.normalize();
             Ray cameraRay{cameraRayOrigin, cameraRayDirection};
 
-            unsigned int depth = 0;
-            pixels.push_back(castRay(cameraRay, objects, lights, options, depth));
+            pixels.push_back(castRay(cameraRay, objects, lights, options));
         }
     }
 

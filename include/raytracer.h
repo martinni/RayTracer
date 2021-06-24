@@ -5,10 +5,11 @@
 
 #include "object.h"
 #include "pixel.h"
+#include "point.h"
 
 struct Light
 {
-    Vec3 position;
+    Point position;
     float brightness;
 };
 

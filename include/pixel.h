@@ -7,6 +7,7 @@ struct Color
     float blue;
 
     Color operator*(const float &x) const { return Color{red * x, green * x, blue * x}; }
+    Color operator+(const float &x) const { return Color{red + x, green + x, blue + x}; }
 };
 
 struct Pixel

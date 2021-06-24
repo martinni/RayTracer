@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <random>
 #include <stdlib.h>
 #include <vector>
 
@@ -18,15 +19,26 @@ int main()
 {
     PpmFile ppmFile("./scene.ppm", IMG_WIDTH, IMG_HEIGHT, COLOR_RANGE);
 
-    std::vector<std::shared_ptr<Object>> objects = {
-        std::make_shared<Sphere>(Point(1, 2, -15), 0.5, Color{1, 0, 0}, DiffuseProperties{}),
-        std::make_shared<Sphere>(Point(0.0, 0, -20), 2, Color{0, 1, 0}, DiffuseProperties{}),
-        std::make_shared<Sphere>(Point(5.0, -1, -15), 2, Color{0, 0, 0.5}, DiffuseProperties{}),
-        std::make_shared<Sphere>(Point(-5.5, 0, -15), 3, Color{0.5, 0.5, 0.5},
-                                 DiffuseProperties{})};
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1);
+    std::uniform_real_distribution<> dis2(-0.7, 0.7);
+
+    std::vector<std::shared_ptr<Object>> objects;
+    const int numSpheres = 10;
+    for (int i = 0; i < numSpheres; i++)
+    {
+        Point randomPosition(static_cast<float>(dis2(gen)), static_cast<float>(dis2(gen)),
+                             -1 * static_cast<float>(dis(gen)) * 10);
+        float radius = static_cast<float>(dis(gen)) * 0.5;
+        Color color{static_cast<float>(dis(gen)), static_cast<float>(dis(gen)),
+                    static_cast<float>(dis(gen))};
+        objects.push_back(
+            std::make_shared<Sphere>(randomPosition, radius, color, DiffuseProperties{}));
+    }
 
     std::vector<std::shared_ptr<Light>> lights = {
-        std::make_shared<Light>(Light{Point(7, 7, 0), 0.7})};
+        std::make_shared<Light>(Light{Point(10, 4, -12), 1})};
 
     std::vector<Pixel> pixels = renderScene(objects, lights, IMG_WIDTH, IMG_HEIGHT);
     ppmFile.writePixels(pixels);
