@@ -1,6 +1,6 @@
 # Raytracer project
 
-Simple raytracer randomly generating spheres and rendering them with diffuse Phong shading.
+Simple raytracer that randomly generates spheres and render them with diffuse Phong shading.
 
 ## Build
 
